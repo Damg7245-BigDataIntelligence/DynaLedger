@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: raw_num_table
+    description: "SEC financial numeric data"
+    columns:
+      - name: adsh
+        description: "Accession Number (Primary Key)"
+        tests:
+          - unique
+          - not_null
+
+      - name: tag
+        description: "XBRL reporting tag"
+        tests:
+          - not_null
+
+      - name: ddate
+        description: "Data period end date"
+        tests:
+          - not_null
+          - dbt_expectations.expect_column_values_to_match_regex:
+              regex: '^\d{8}$'  # Ensures YYYYMMDD format
+
+      - name: qtrs
+        description: "Number of quarters represented"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: 0
+              max_value: 4
+
+      - name: uom
+        description: "Unit of measure (e.g., USD, shares)"
+        tests:
+          - not_null
+
+      - name: value
+        description: "Reported financial value"
+        tests:
+          - dbt_expectations.expect_column_values_to_be_between:
+              min_value: -100000000000
+              max_value: 100000000000
