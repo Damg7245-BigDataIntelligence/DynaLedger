@@ -1,28 +1,3 @@
-# from airflow import DAG
-# from airflow.operators.python import PythonOperator
-# from airflow.operators.bash import BashOperator
-# from datetime import datetime, timedelta
-# import os
-# import json
-
-# # Default arguments (good practice)
-# default_args = {
-#     'owner': 'airflow',
-#     'depends_on_past': False,
-#     'start_date': datetime(2024, 1, 1),
-#     'retries': 1,
-#     'retry_delay': timedelta(minutes=5),
-# }
-
-# # Create DAG
-# dag = DAG(
-#     'raw_data_loading',
-#     default_args=default_args,
-#     description='raw_data_loading pipeline',
-#     schedule_interval='@daily',
-#     catchup=False
-# )
-
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta

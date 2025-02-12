@@ -9,7 +9,7 @@ def load_variables():
         current_dir = os.path.dirname(os.path.abspath(__file__))
         
         # Navigate to the variables directory (two levels up)
-        variables_path = os.path.join(current_dir, "..", "..", "variables", "variables.json")
+        variables_path = os.path.join(current_dir, "variables", "variables.json")
         
         print(f"Looking for variables file at: {variables_path}")
         
