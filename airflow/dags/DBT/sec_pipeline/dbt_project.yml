@@ -36,3 +36,5 @@ models:
       materialized: table
       snowflake_warehouse: SEC_WH
 
+# tests:
+#   severity: warn

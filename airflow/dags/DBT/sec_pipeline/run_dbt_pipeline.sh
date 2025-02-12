@@ -18,4 +18,6 @@ dbt run-operation copy_into_raw_tag --args "{ \"stage_name\": \"$STAGE_NAME\" }"
 
 echo "✅ Pipeline execution completed successfully!"
 
-dbt test --vars "{ \"stage_name\": \"$STAGE_NAME\" }"
+dbt test --vars "{ \"stage_name\": \"$STAGE_NAME\" }" --store-failures
+
+
