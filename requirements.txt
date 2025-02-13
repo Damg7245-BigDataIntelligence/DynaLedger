@@ -3,7 +3,6 @@ boto3
 apache-airflow
 pyarrow
 requests
-urllib
 snowflake-connector-python
 python-dotenv
 pandas
