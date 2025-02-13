@@ -1,0 +1,13 @@
+sec_pipeline:
+  outputs:
+    dev:
+      account: jib93318.us-east-1
+      database: SEC_DB
+      password: Rotlu@123
+      role: SEC_ROLE
+      schema: SEC_SCHEMA
+      threads: 10
+      type: snowflake
+      user: sahilmutha1999
+      warehouse: SEC_WH
+  target: dev
