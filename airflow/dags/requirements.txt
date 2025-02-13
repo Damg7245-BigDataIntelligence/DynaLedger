@@ -7,3 +7,7 @@ urllib
 snowflake-connector-python
 python-dotenv
 pandas
+streamlit
+plotly
+fastapi
+uvicorn
