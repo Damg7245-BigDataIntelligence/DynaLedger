@@ -5,3 +5,5 @@ snowflake-connector-python
 bs4
 pandas
 pyarrow
+dbt-core
+dbt-snowflake

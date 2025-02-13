@@ -2,6 +2,12 @@
 
 set -e  # Exit script immediately on error
 
+# Set the working directory to where dbt_project.yml is located
+cd /opt/airflow/dags/DBT/sec_pipeline/
+
+# Explicitly set the DBT profiles directory
+export DBT_PROFILES_DIR=/opt/airflow/dags/DBT/.dbt
+
 STAGE_NAME="2023Q1"
 
 echo -e "\n🚀 Step 0: Installing dependencies..."
