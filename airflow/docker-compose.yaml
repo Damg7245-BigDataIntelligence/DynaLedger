@@ -25,7 +25,7 @@ x-airflow-common:
   build: .
   environment:
     &airflow-common-env
-    AIRFLOW_UID: ${AIRFLOW_UID:-50000}    
+    AIRFLOW_UID: "50000"
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     # AIRFLOW__CORE__EXECUTOR: LocalExecutor
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
@@ -230,7 +230,7 @@ services:
       _AIRFLOW_WWW_USER_USERNAME: ${_AIRFLOW_WWW_USER_USERNAME:-airflow}
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
       _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-snowflake boto3"
-      _AIRFLOW_UID: ${AIRFLOW_UID:-50000}
+      _AIRFLOW_UID: "50000"
     volumes:
       - ${AIRFLOW_PROJ_DIR:-.}:/sources
 
