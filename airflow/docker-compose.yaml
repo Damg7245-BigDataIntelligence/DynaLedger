@@ -49,16 +49,16 @@ x-airflow-common:
     # _PIP_ADDITIONAL_REQUIREMENTS: "boto3 dbt-core dbt-snowflake snowflake-connector-python apache-airflow-providers-snowflake"
     
   volumes:
-    - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
-    - ${AIRFLOW_PROJ_DIR:-.}/variables:/opt/airflow/variables
-    - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
-    - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
-    - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
-    - ${AIRFLOW_PROJ_DIR:-.}/.env:/opt/airflow/.env
-    - ${AIRFLOW_PROJ_DIR:-.}/requirements.txt:/requirements.txt
-    - ${AIRFLOW_PROJ_DIR:-.}/sec_pipeline:/opt/airflow/sec_pipeline
+    - ./dags:/opt/airflow/dags
+    - ./variables:/opt/airflow/variables
+    - ./logs:/opt/airflow/logs
+    - ./config:/opt/airflow/config
+    - ./plugins:/opt/airflow/plugins
+    - ./env:/opt/airflow/.env
+    - ./requirements.txt:/requirements.txt
+    - ./sec_pipeline:/opt/airflow/sec_pipeline
 
-  user: "${AIRFLOW_UID}:0"
+  user: "50000:0"
   depends_on:
     &airflow-common-depends-on
     redis:
@@ -177,7 +177,7 @@ services:
     command:
       - -c
       - |
-        if [[ -z "${AIRFLOW_UID}" ]]; then
+        if [[ -z "50000" ]]; then
           echo
           echo -e "\033[1;33mWARNING!!!: AIRFLOW_UID not set!\e[0m"
           echo "If you are on Linux, you SHOULD follow the instructions below to set "
@@ -232,7 +232,7 @@ services:
       _PIP_ADDITIONAL_REQUIREMENTS: "apache-airflow-providers-snowflake boto3"
       _AIRFLOW_UID: "50000"
     volumes:
-      - ${AIRFLOW_PROJ_DIR:-.}:/sources
+      - ./:/sources
 
   airflow-cli:
     <<: *airflow-common
