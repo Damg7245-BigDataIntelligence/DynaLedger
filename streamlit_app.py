@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # API endpoints
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = "https://dynaledger-fast-api-930030449616.us-east1.run.app"
 
 def check_data_availability(source, year, quarter):
     """Check if data is available in Snowflake"""
