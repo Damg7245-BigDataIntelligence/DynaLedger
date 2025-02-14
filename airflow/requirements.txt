@@ -2,9 +2,6 @@ snowflake-connector-python
 bs4
 pandas
 pyarrow
-ujson
-dbt-core
-dbt-snowflake
 python-dotenv
 snowflake-sqlalchemy
 sqlalchemy

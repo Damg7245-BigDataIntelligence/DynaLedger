@@ -170,7 +170,7 @@ services:
         condition: service_completed_successfully
 
   airflow-init:
-    user: "${AIRFLOW_UID:-50000}:0"
+    user: "50000"
     <<: *airflow-common
     entrypoint: /bin/bash
     # yamllint disable rule:line-length
