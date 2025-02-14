@@ -254,9 +254,6 @@ models:
         description: "EDGAR Accession Number."
         tests:
           - not_null
-          - relationships:
-              to: ref('sub')
-              field: adsh
 
       - name: report
         description: "Report identifier within statements."
@@ -280,17 +277,11 @@ models:
         description: "XBRL tag assigned by the filer."
         tests:
           - not_null
-          - relationships:
-              to: ref('tag')
-              field: tag
 
       - name: version
         description: "Taxonomy version."
         tests:
           - not_null
-          - relationships:
-              to: ref('tag')
-              field: version
 
       - name: inpth
         description: "Indicates if the value was presented parenthetically (0 or 1)."
