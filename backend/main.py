@@ -151,7 +151,7 @@ async def get_financial_data(year: int, quarter: str, data_type: str, source: st
         if source == "RAW":
             # Existing logic for RAW data
             stmt_type = {
-                "Income Statement": "IS",
+                "Income Statement": "IC",
                 "Balance Sheet": "BS",
                 "Cash Flow": "CF"
             }.get(data_type)
@@ -190,9 +190,9 @@ async def get_financial_data(year: int, quarter: str, data_type: str, source: st
         elif source == "JSON":
             # Logic for JSON data
             view_name = {
-                "Balance Sheet": f"view_balance_sheet_{year}Q{quarter.replace('Q', '')}",
-                "Income Statement": f"view_income_statement_{year}Q{quarter.replace('Q', '')}",
-                "Cash Flow": f"view_cash_flow_{year}Q{quarter.replace('Q', '')}"
+                "Balance Sheet": f"view_balance_sheet_{year}_Q{quarter.replace('Q', '')}",
+                "Income Statement": f"view_income_statement_{year}_Q{quarter.replace('Q', '')}",
+                "Cash Flow": f"view_cash_flow_{year}_Q{quarter.replace('Q', '')}"
             }.get(data_type)
             
             if not view_name:
