@@ -1,5 +1,5 @@
 from airflow import DAG
-from airflow.operators.python import PythonOperator, BranchPythonOperator
+from airflow.operators.python import PythonOperator, BranchPythonOperator, ShortCircuitOperator
 from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 
@@ -33,23 +33,29 @@ task_load_variables = PythonOperator(
 )
 
 # **Step 2: Check Data in S3**
-def check_data_in_s3(**context):
-    """Checks if data is present in S3 for the given year and quarter"""
+def check_data_and_set_variable(**context):
+    """Checks if data is present in S3 and sets a variable"""
     year = context['task_instance'].xcom_pull(task_ids='load_airflow_variables', key='sec_year')
     quarter = context['task_instance'].xcom_pull(task_ids='load_airflow_variables', key='sec_quarter')
     
     if is_data_present_in_s3(year, quarter):
-        return 'run_dbt_pipeline'
+        context['task_instance'].xcom_push(key='run_dbt', value=True)
     else:
-        return 'scrape_sec_data'
+        context['task_instance'].xcom_push(key='run_dbt', value=False)
 
-task_check_s3 = BranchPythonOperator(
-    task_id='check_data_in_s3',
-    python_callable=check_data_in_s3,
+task_check_data_and_set_variable = PythonOperator(
+    task_id='check_data_and_set_variable',
+    python_callable=check_data_and_set_variable,
     provide_context=True,
     dag=dag
 )
 
+task_decide_dbt = ShortCircuitOperator(
+    task_id='decide_dbt',
+    python_callable=lambda **context: context['task_instance'].xcom_pull(task_ids='check_data_and_set_variable', key='run_dbt'),
+    provide_context=True,
+    dag=dag
+)
 # **Step 3: Scrape SEC Data**
 def scrape_sec_data(**context):
     """Fetches SEC ZIP files and stores them in S3"""
@@ -93,7 +99,8 @@ task_run_dbt = BashOperator(
     dag=dag
 )
 
-# **Set Task Dependencies**
-task_load_variables >> task_check_s3
-task_check_s3 >> [task_scrape_sec, task_run_dbt]
-task_scrape_sec >> task_extract_convert >> task_run_dbt
+# Set Task Dependencies
+task_load_variables >> task_check_data_and_set_variable
+task_check_data_and_set_variable >> task_decide_dbt
+task_decide_dbt >> task_run_dbt
+task_check_data_and_set_variable >> task_scrape_sec >> task_extract_convert >> task_run_dbt

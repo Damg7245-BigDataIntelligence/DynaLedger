@@ -12,12 +12,13 @@ export DBT_PROFILES_DIR=/opt/airflow/sec_pipeline/profiles
 YEAR=$1
 QUARTER=$2
 STAGE_NAME="sec_stage_${YEAR}Q${QUARTER}"
+DBT_SCHEMA=${DBT_SCHEMA:-SEC_DATA_DFT}
 
 echo -e "\n🚀 Step 0: Installing dependencies..."
 dbt deps
 
 echo -e "\n🚀 Step 0.5: Creating schema..."
-dbt run-operation create_schema --args '{"schema_name": "'"{{ target.schema }}"'"}'
+dbt run-operation create_schema --args '{"schema_name": "'"$DBT_SCHEMA"'"}'
 
 # Add this step before running dbt models
 echo -e "\n🚀 Step 1: Creating file format..."
