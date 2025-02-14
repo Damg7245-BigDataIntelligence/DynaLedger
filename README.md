@@ -1,12 +1,7 @@
-# **Assignment 02 - SEC Financial Dataset**
-
-## **👥 Team Members**
-- **Janvi Bharatkumar Chitroda**
-- **Ketki Mude**
-- **Sahil Mutha**
+# **SEC Financial Dataset Processing System**
+This project automates the ingestion, transformation, and validation of SEC financial datasets using **Snowflake, Apache Airflow, DBT, FastAPI, and Streamlit**. It ensures seamless data processing, integrity checks, and interactive financial data visualization.
 
 ---
-
 ## **📌 Project Resources**
 - 📘 **Google Codelab:** [CodeLab](https://codelabs-preview.appspot.com/?file_id=1mBO6xQxSLutdNoxKHmQyAxqUgg8YdiZU9MckpMwRXxM#6)
 - 🌐 **App (Streamlit Cloud):** [Streamlit Link](https://dynaledger-ixvkclqgn7gofx9bzf6erk.streamlit.app/)
