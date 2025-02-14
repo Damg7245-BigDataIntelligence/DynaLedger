@@ -1,5 +1,6 @@
-{% macro copy_into_raw_num(stage_name) %}
-  {% set table_name = 'RAW_NUM_' ~ stage_name %}
+
+{% macro copy_into_raw_num(stage_name, file_name) %}
+  {% set table_name = 'RAW_NUM_' ~ file_name %}
   {% set stage_location = '@' ~ stage_name ~ '/num.parquet' %}
 
   {% set sql %}

@@ -1,5 +1,5 @@
-{% macro copy_into_raw_tag(stage_name) %}
-  {% set table_name = 'RAW_TAG_' ~ stage_name %}
+{% macro copy_into_raw_tag(stage_name, file_name) %}
+  {% set table_name = 'RAW_TAG_' ~ file_name %}
   {% set stage_location = '@' ~ stage_name ~ '/tag.parquet' %}
 
   {% set sql %}

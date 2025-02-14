@@ -1,5 +1,5 @@
-{% macro copy_into_raw_pre(stage_name) %}
-  {% set table_name = 'RAW_PRE_' ~ stage_name %}
+{% macro copy_into_raw_pre(stage_name, file_name) %}
+  {% set table_name = 'RAW_PRE_' ~ file_name %}
   {% set stage_location = '@' ~ stage_name ~ '/pre.parquet' %}
 
   {% set sql %}

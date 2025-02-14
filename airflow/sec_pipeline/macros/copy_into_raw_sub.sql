@@ -1,5 +1,5 @@
-{% macro copy_into_raw_sub(stage_name) %}
-  {% set table_name = 'RAW_SUB_' ~ stage_name %}
+{% macro copy_into_raw_sub(stage_name, file_name) %}
+  {% set table_name = 'RAW_SUB_' ~ file_name %}
   {% set stage_location = '@' ~ stage_name ~ '/sub.parquet' %}
 
   {% set sql %}

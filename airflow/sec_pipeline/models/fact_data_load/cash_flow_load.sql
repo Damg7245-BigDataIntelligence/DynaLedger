@@ -1,7 +1,7 @@
-{% set stage_name = var('stage_name', '2023Q1') %}
+{% set file_name = var('file_name', '2023Q1') %}
 
 {{ config(
-    alias='FCT_CASH_FLOW_' ~ stage_name,
+    alias='CASH_FLOW_' ~ file_name,
     materialized='table'
 ) }}
 

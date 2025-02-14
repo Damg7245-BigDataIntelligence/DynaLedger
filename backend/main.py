@@ -4,6 +4,7 @@ import snowflake.connector
 import os
 import numpy as np
 from pydantic import BaseModel
+import time
 
 app = FastAPI()
 load_dotenv()
@@ -22,7 +23,7 @@ def get_snowflake_connection(schema_name: str):
         print(f"Successfully connected to Snowflake with schema {schema_name}.")
         return conn
     except Exception as e:
-        print(f"Error connecting to Snowflake: {str(e)}", exc_info=True)
+        print(f"Error connecting to Snowflake: {str(e)}")
         raise HTTPException(status_code=500, detail="Database connection error")
 
 
@@ -67,15 +68,22 @@ async def check_data_availability(source: str, year: int, quarter: str):
 @app.get("/get-table-info")
 async def get_table_info(data_source: str, year: int, quarter: str):
     try:
-        schema_name = "SEC_DATA_RAW" if data_source == "Raw" else "SEC_DATA_JSON"
+        if data_source == "Raw":
+            schema_name = "SEC_DATA_RAW"
+        elif data_source == "JSON":
+            schema_name = "SEC_DATA_JSON"
+        elif data_source == "Fact Tables":
+            schema_name = "SEC_DATA_DFT"
         conn = get_snowflake_connection(schema_name)
         cur = conn.cursor()
         
         stage_name = f"{year}Q{quarter.replace('Q', '')}"
         if data_source == "Raw":
-            tables = [f"RAW_NUM_{stage_name}", f"RAW_PRE_{stage_name}", f"RAW_SUB_{stage_name}", f"RAW_TAG_{stage_name}"]
+            tables = [f"SEC_NUM_{stage_name}", f"SEC_PRE_{stage_name}", f"SEC_SUB_{stage_name}", f"SEC_TAG_{stage_name}"]
         elif data_source == "JSON":
-            tables = ["sec_json_data"]
+            tables = [f"SEC_DATA_{stage_name}"]
+        elif data_source == "Fact Tables":
+            tables = [f"BALANCE_SHEET_{stage_name}", f"INCOME_STATEMENT_{stage_name}", f"CASH_FLOW_{stage_name}"]
         else:
             raise HTTPException(status_code=400, detail="Invalid data source")
         
@@ -101,7 +109,12 @@ async def get_table_info(data_source: str, year: int, quarter: str):
 @app.post("/execute-custom-query")
 async def execute_custom_query(query_model: QueryModel, data_source: str):
     try:
-        schema_name = "SEC_DATA_RAW" if data_source == "Raw" else "SEC_DATA_JSON"
+        if data_source == "Raw":
+            schema_name = "SEC_DATA_RAW"
+        elif data_source == "JSON":
+            schema_name = "SEC_DATA_JSON"
+        elif data_source == "Fact Tables":
+            schema_name = "SEC_DATA_DFT"
         conn = get_snowflake_connection(schema_name)
         cur = conn.cursor()
         query = query_model.query
@@ -124,37 +137,81 @@ async def execute_custom_query(query_model: QueryModel, data_source: str):
 @app.get("/get-financial-data")
 async def get_financial_data(year: int, quarter: str, data_type: str, source: str):
     try:
-        schema_name = "SEC_DATA_RAW" if source == "RAW" else "SEC_DATA_JSON"
+        schema_name = None
+        if source == "RAW":
+            schema_name = "SEC_DATA_RAW"
+        elif source == "FACT TABLES":
+            schema_name = "SEC_DATA_DFT"
+        elif source == "JSON":
+            schema_name = "SEC_DATA_JSON"
         conn = get_snowflake_connection(schema_name)
         cur = conn.cursor()
         
-        # Determine the view to query based on data_type
-        view_name = {
-            "Balance Sheet": f"{schema_name}.view_balance_sheet",
-            "Income Statement": f"{schema_name}.view_income_statement",
-            "Cash Flow": f"{schema_name}.view_cash_flow"
-        }.get(data_type)
+        start_time = time.time()
+        if source == "RAW":
+            # Existing logic for RAW data
+            stmt_type = {
+                "Income Statement": "IS",
+                "Balance Sheet": "BS",
+                "Cash Flow": "CF"
+            }.get(data_type)
+            
+            if not stmt_type:
+                raise HTTPException(status_code=400, detail="Invalid data type")
+            
+            query = f"""
+            SELECT 
+                s.adsh, s.cik, s.name, s.sic, s.countryba, s.stprba, s.cityba, s.filed,
+                p.line, p.plabel, n.tag, n.version, n.ddate, n.qtrs, n.uom, n.value
+            FROM 
+                {schema_name}.sec_sub_{year}Q{quarter.replace('Q', '')} s
+            JOIN 
+                {schema_name}.sec_pre_{year}Q{quarter.replace('Q', '')} p ON s.adsh = p.adsh
+            JOIN 
+                {schema_name}.sec_num_{year}Q{quarter.replace('Q', '')} n ON s.adsh = n.adsh AND p.tag = n.tag AND p.version = n.version
+            WHERE 
+                p.stmt = '{stmt_type}'
+            ORDER BY 
+                s.adsh, p.line;
+            """
+        elif source == "FACT TABLES":
+            # Existing logic for FACT data
+            table_name = {
+                "Balance Sheet": f"BALANCE_SHEET_{year}Q{quarter.replace('Q', '')}",
+                "Income Statement": f"INCOME_STATEMENT_{year}Q{quarter.replace('Q', '')}",
+                "Cash Flow": f"CASH_FLOW_{year}Q{quarter.replace('Q', '')}"
+            }.get(data_type)
+            
+            if not table_name:
+                raise HTTPException(status_code=400, detail="Invalid data type")
+            
+            query = f"SELECT * FROM {schema_name}.{table_name}"
         
-        if not view_name:
-            raise HTTPException(status_code=400, detail="Invalid data type")
-        
-        # Construct the query
-        query = f"""
-        SELECT * FROM {view_name}
-        WHERE year = {year} AND quarter = '{quarter}'
-        """
+        elif source == "JSON":
+            # Logic for JSON data
+            view_name = {
+                "Balance Sheet": f"view_balance_sheet_{year}Q{quarter.replace('Q', '')}",
+                "Income Statement": f"view_income_statement_{year}Q{quarter.replace('Q', '')}",
+                "Cash Flow": f"view_cash_flow_{year}Q{quarter.replace('Q', '')}"
+            }.get(data_type)
+            
+            if not view_name:
+                raise HTTPException(status_code=400, detail="Invalid data type")
+            
+            query = f"SELECT * FROM {schema_name}.{view_name}"
         
         print(f"Executing query: {query}")
         cur.execute(query)
+        execution_time = time.time() - start_time
         columns = [desc[0] for desc in cur.description]
         rows = cur.fetchall()
         results = [dict(zip(columns, row)) for row in rows]
         
         sanitized_results = sanitize_float_values(results)
         
-        return {"data": sanitized_results}
+        return {"data": sanitized_results, "execution_time": execution_time}
     except Exception as e:
-        print(f"Error executing query: {str(e)}", exc_info=True)
+        print(f"Error executing query: {str(e)}")
         raise HTTPException(status_code=500, detail="Failed to fetch data from the database")
     finally:
         if 'cur' in locals():
@@ -162,7 +219,7 @@ async def get_financial_data(year: int, quarter: str, data_type: str, source: st
         if 'conn' in locals():
             conn.close()
             
-                        
+            
 @app.get("/query-data")
 async def execute_query(query: str = Query(..., min_length=1)):
     try:

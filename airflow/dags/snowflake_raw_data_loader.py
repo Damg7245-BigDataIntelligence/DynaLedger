@@ -37,8 +37,7 @@ class SnowflakeLoader:
         """Create schema for raw SEC data"""
         try:
             # Drop schema if exists and create new one
-            self.cur.execute(f"DROP SCHEMA IF EXISTS {self.schema_name}")
-            self.cur.execute(f"CREATE SCHEMA {self.schema_name}")
+            self.cur.execute(f"CREATE SCHEMA IF NOT EXISTS {self.schema_name}")
             self.cur.execute(f"USE SCHEMA {self.schema_name}")
             logger.info(f"Created and switched to schema: {self.schema_name}")
         except Exception as e:

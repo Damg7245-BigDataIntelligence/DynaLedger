@@ -1,4 +1,4 @@
-{% set table_name = 'RAW_PRE_' ~ var('stage_name', '2023Q1') %}
+{% set table_name = 'RAW_PRE_' ~ var('file_name', '2023Q1') %}
 
 {{ config(
     alias=table_name  
