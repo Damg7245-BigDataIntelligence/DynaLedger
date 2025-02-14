@@ -1,6 +1,7 @@
 {% macro create_stage(stage_name) %}
-  {% set full_stage_name = 'SEC_STAGE_' ~ stage_name %}
-  {% set s3_url = 's3://bigdata-team3-ass2-bucket/extracted/' ~ stage_name %}
+  {% set full_stage_name = stage_name %}
+  {% set year_quarter = stage_name.split('_')[-1] %}
+  {% set s3_url = 's3://bigdata-team3-ass2-bucket/extracted/' ~ year_quarter %}
 
   {% set sql %}
       CREATE STAGE IF NOT EXISTS {{ full_stage_name }}

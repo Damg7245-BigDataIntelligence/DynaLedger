@@ -23,10 +23,13 @@ def check_data_availability(source, year, quarter):
         st.error(f"Error checking data availability: {str(e)}")
         return False
 
-def fetch_table_info(data_source):
-    """Fetch table information based on the data source"""
+def fetch_table_info(data_source, year, quarter):
+    """Fetch table information based on the data source, year, and quarter"""
     try:
-        response = requests.get(f"{API_BASE_URL}/get-table-info", params={"data_source": data_source})
+        response = requests.get(
+            f"{API_BASE_URL}/get-table-info",
+            params={"data_source": data_source, "year": year, "quarter": quarter}
+        )
         if response.status_code == 200:
             return response.json()
         else:
@@ -52,13 +55,13 @@ def fetch_financial_data(year, quarter, data_type, source):
         st.error(f"Error fetching data: {str(e)}")
         return None
     
-def execute_custom_query(query, data_source):
+def execute_custom_query(query, data_source, year, quarter):
     """Execute custom query against Snowflake"""
     try:
         response = requests.post(
             f"{API_BASE_URL}/execute-custom-query",
             json={"query": query},
-            params={"data_source": data_source}
+            params={"data_source": data_source, "year": year, "quarter": quarter}
         )
         if response.status_code == 200:
             return pd.DataFrame(response.json()["data"])
@@ -89,23 +92,27 @@ def main():
         with col1:
             source = st.selectbox(
                 "Select Data Source",
-                ["RAW", "JSON", "FACT Tables"]
+                ["RAW", "JSON", "FACT Tables"],
+                key="data_explorer_source"
             )
         with col2:
             year = st.selectbox(
                 "Select Year",
-                range(2009, datetime.now().year + 1)
+                range(2009, datetime.now().year + 1),
+                key="data_explorer_year"
             )
         with col3:
             quarter = st.selectbox(
                 "Select Quarter",
-                ["Q1", "Q2", "Q3", "Q4"]
+                ["Q1", "Q2", "Q3", "Q4"],
+                key="data_explorer_quarter"
             )
         
         with col4:
             data_type = st.selectbox(
                 "Select Data Type",
-                ["Balance Sheet", "Income Statement", "Cash Flow"]
+                ["Balance Sheet", "Income Statement", "Cash Flow"],
+                key="data_explorer_data_type"
             )
 
         if st.button("Load Data"):
@@ -148,10 +155,31 @@ def main():
         st.header("Custom SQL Query")
         
         # Dropdown to select data source
-        data_source = st.selectbox("Select Data Source", ["Raw", "JSON"])
+        
+        
+        # Arrange year and quarter in a single line
+        data_source, col1, col2 = st.columns(3)
+        with data_source:
+            data_source = st.selectbox(
+                "Select Data Source",
+                ["Raw", "JSON"],
+                key="custom_query_source"
+            )
+        with col1:
+            year = st.selectbox(
+                "Select Year for Query",
+                range(2009, datetime.now().year + 1),
+                key="custom_query_year"
+            )
+        with col2:
+            quarter = st.selectbox(
+                "Select Quarter for Query",
+                ["Q1", "Q2", "Q3", "Q4"],
+                key="custom_query_quarter"
+            )
         
         # Fetch and display table info
-        table_info = fetch_table_info(data_source)
+        table_info = fetch_table_info(data_source, year, quarter)
         if table_info:
             num_tables = len(table_info)
             cols = st.columns(num_tables)
@@ -172,7 +200,7 @@ def main():
         
         if st.button("Execute Query"):
             if query:
-                df = execute_custom_query(query, data_source)
+                df = execute_custom_query(query, data_source, year, quarter)
                 if df is not None:
                     st.success("Query executed successfully!")
                     st.dataframe(df)

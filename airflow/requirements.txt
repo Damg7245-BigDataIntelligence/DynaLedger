@@ -1,7 +1,13 @@
-apache-airflow==2.5.0
-requests
+# apache-airflow==2.5.0
+# requests
+# boto3
+# snowflake-connector-python
+# bs4
+# pandas
+# pyarrow
+# apache-airflow-providers-snowflake
+
+apache-airflow-providers-snowflake
 boto3
-snowflake-connector-python
-bs4
-pandas
-pyarrow
+dbt-core
+dbt-snowflake

@@ -1,6 +1,6 @@
-{% macro copy_into_raw_num(stage_name) %}
-  {% set table_name = 'RAW_NUM_' ~ stage_name %}
-  {% set stage_location = '@SEC_STAGE_' ~ stage_name ~ '/num.parquet' %}
+{% macro copy_into_raw_pre(stage_name) %}
+  {% set table_name = 'RAW_PRE_' ~ stage_name %}
+  {% set stage_location = '@' ~ stage_name ~ '/pre.parquet' %}
 
   {% set sql %}
       COPY INTO {{ table_name }}

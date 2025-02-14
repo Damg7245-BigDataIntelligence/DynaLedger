@@ -2,9 +2,6 @@ from fastapi import FastAPI, HTTPException, Query
 from dotenv import load_dotenv
 import snowflake.connector
 import os
-import pandas as pd
-from typing import Optional, Dict, Any
-import json
 import numpy as np
 from pydantic import BaseModel
 
@@ -68,14 +65,15 @@ async def check_data_availability(source: str, year: int, quarter: str):
             conn.close()
 
 @app.get("/get-table-info")
-async def get_table_info(data_source: str):
+async def get_table_info(data_source: str, year: int, quarter: str):
     try:
         schema_name = "SEC_DATA_RAW" if data_source == "Raw" else "SEC_DATA_JSON"
         conn = get_snowflake_connection(schema_name)
         cur = conn.cursor()
         
+        stage_name = f"{year}Q{quarter.replace('Q', '')}"
         if data_source == "Raw":
-            tables = ["sec_tag_data_raw", "sec_sub_data_raw", "sec_num_data_raw", "sec_pre_data_raw"]
+            tables = [f"RAW_NUM_{stage_name}", f"RAW_PRE_{stage_name}", f"RAW_SUB_{stage_name}", f"RAW_TAG_{stage_name}"]
         elif data_source == "JSON":
             tables = ["sec_json_data"]
         else:

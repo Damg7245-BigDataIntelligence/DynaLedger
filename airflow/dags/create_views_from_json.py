@@ -23,8 +23,6 @@ CREATE_BALANCE_SHEET_VIEW_SQL = f"""
 CREATE OR REPLACE VIEW {SCHEMA_NAME}.view_balance_sheet AS
 SELECT 
     s.company,
-    s.year,
-    s.quarter,
     value:label::VARCHAR AS label,
     value:concept::VARCHAR AS concept,
     value:info::VARCHAR AS info,
@@ -38,23 +36,19 @@ CREATE_INCOME_STATEMENT_VIEW_SQL = f"""
 CREATE OR REPLACE VIEW {SCHEMA_NAME}.view_income_statement AS
 SELECT 
     s.company,
-    s.year,
-    s.quarter,
     value:label::VARCHAR AS label,
     value:concept::VARCHAR AS concept,
     value:info::VARCHAR AS info,
     value:unit::VARCHAR AS unit,
     value:value::FLOAT AS value
 FROM {SCHEMA_NAME}.sec_json_data s,
-LATERAL FLATTEN(input => s.data:ic) AS value;
+LATERAL FLATTEN(input => s.data:is) AS value;
 """
 
 CREATE_CASH_FLOW_VIEW_SQL = f"""
 CREATE OR REPLACE VIEW {SCHEMA_NAME}.view_cash_flow AS
 SELECT 
     s.company,
-    s.year,
-    s.quarter,
     value:label::VARCHAR AS label,
     value:concept::VARCHAR AS concept,
     value:info::VARCHAR AS info,
@@ -74,22 +68,22 @@ def create_views_in_snowflake():
             database=SNOWFLAKE_DATABASE
         )
         cs = ctx.cursor()
-        logger.info("✅ Successfully connected to Snowflake.")
+        logger.info("Successfully connected to Snowflake.")
 
         # Create views
-        logger.info("🔹 Creating view for balance sheet...")
+        logger.info("Creating view for balance sheet...")
         cs.execute(CREATE_BALANCE_SHEET_VIEW_SQL)
 
-        logger.info("🔹 Creating view for income statement...")
+        logger.info("Creating view for income statement...")
         cs.execute(CREATE_INCOME_STATEMENT_VIEW_SQL)
 
-        logger.info("🔹 Creating view for cash flow...")
+        logger.info("Creating view for cash flow...")
         cs.execute(CREATE_CASH_FLOW_VIEW_SQL)
 
-        logger.info("✅ Views created successfully.")
+        logger.info("Views created successfully.")
 
     except Exception as e:
-        logger.error(f"❌ Error creating views in Snowflake: {e}", exc_info=True)
+        logger.error(f"Error creating views in Snowflake: {e}", exc_info=True)
     finally:
         cs.close()
         ctx.close()

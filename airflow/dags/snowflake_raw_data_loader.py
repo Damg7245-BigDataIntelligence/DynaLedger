@@ -25,7 +25,7 @@ class SnowflakeLoader:
             database=os.getenv('SNOWFLAKE_DATABASE')
         )
         self.cur = self.conn.cursor()
-        self.schema_name = "SEC_DATA_RAW"
+        self.schema_name = f"SEC_DATA_RAW"
         self.s3_bucket = os.getenv('AWS_S3_BUCKET_NAME')
         self.s3_path = f'extracted/{self.source_id}/'  
         
@@ -47,12 +47,14 @@ class SnowflakeLoader:
 
     def create_tables(self):
         """Drop and then Create the required tables in Snowflake"""
-        # First drop existing tables in correct order (reverse of creation order)
+        # Define table names with dynamic suffix
+        table_suffix = f"_{self.source_id}"
+        
         drop_statements = [
-            "DROP TABLE IF EXISTS sec_num_data_raw",
-            "DROP TABLE IF EXISTS sec_pre_data_raw",
-            "DROP TABLE IF EXISTS sec_sub_data_raw",
-            "DROP TABLE IF EXISTS sec_tag_data_raw"
+            f"DROP TABLE IF EXISTS sec_num{table_suffix}",
+            f"DROP TABLE IF EXISTS sec_pre{table_suffix}",
+            f"DROP TABLE IF EXISTS sec_sub{table_suffix}",
+            f"DROP TABLE IF EXISTS sec_tag{table_suffix}"
         ]
 
         for drop_stmt in drop_statements:
@@ -60,12 +62,12 @@ class SnowflakeLoader:
             self.cur.execute(drop_stmt)
 
         tables_phase1 = {
-            "sec_tag_data_raw": """
-                CREATE OR REPLACE TABLE sec_tag_data_raw (
+            f"sec_tag{table_suffix}": f"""
+                CREATE OR REPLACE TABLE sec_tag{table_suffix} (
                     tag VARCHAR(256) NOT NULL,
                     version VARCHAR(20) NOT NULL,
-                    custom NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
-                    abstract NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
+                    custom NUMBER(1,0),
+                    abstract NUMBER(1,0),
                     datatype VARCHAR(20),
                     iord CHAR(1),
                     crdr CHAR(1),
@@ -75,12 +77,12 @@ class SnowflakeLoader:
                     PRIMARY KEY (tag, version)
                 );
             """,
-            "sec_sub_data_raw": """
-                CREATE OR REPLACE TABLE sec_sub_data_raw (
+            f"sec_sub{table_suffix}": f"""
+                CREATE OR REPLACE TABLE sec_sub{table_suffix} (
                     adsh VARCHAR(20) NOT NULL,
-                    cik NUMBER(38,0),  -- Changed from VARCHAR to NUMBER for Int64
+                    cik NUMBER(38,0),
                     name VARCHAR(150),
-                    sic NUMBER(38,0),  -- Changed from VARCHAR to NUMBER for Float64
+                    sic NUMBER(38,0),
                     countryba CHAR(2),
                     stprba CHAR(2),
                     cityba VARCHAR(30),
@@ -96,22 +98,22 @@ class SnowflakeLoader:
                     mas2 VARCHAR(40),
                     countryinc CHAR(3),
                     stprinc CHAR(2),
-                    ein NUMBER(38,0),  -- Changed from VARCHAR to NUMBER for Int64
+                    ein NUMBER(38,0),
                     former VARCHAR(150),
-                    changed NUMBER(38,0),  -- Changed from DATE to NUMBER for Float64
+                    changed NUMBER(38,0),
                     afs VARCHAR(5),
-                    wksi NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
-                    fye NUMBER(38,0),  -- Changed from CHAR to NUMBER for Float64
+                    wksi NUMBER(1,0),
+                    fye NUMBER(38,0),
                     form VARCHAR(10),
-                    period NUMBER(38,0),  -- Changed from DATE to NUMBER for Int64
-                    fy NUMBER(38,0),  -- Changed from INTEGER to NUMBER for Float64
+                    period NUMBER(38,0),
+                    fy NUMBER(38,0),
                     fp VARCHAR(2),
-                    filed NUMBER(38,0),  -- Changed from DATE to NUMBER for Int64
-                    accepted VARCHAR(30),  -- Kept as VARCHAR for timestamp string
-                    prevrpt NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
-                    detail NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
+                    filed NUMBER(38,0),
+                    accepted VARCHAR(30),
+                    prevrpt NUMBER(1,0),
+                    detail NUMBER(1,0),
                     instance VARCHAR(40),
-                    nciks NUMBER(38,0),  -- Changed from INTEGER to NUMBER for Int64
+                    nciks NUMBER(38,0),
                     aciks VARCHAR(120),
                     source_file VARCHAR(20),
                     PRIMARY KEY (adsh)
@@ -120,38 +122,38 @@ class SnowflakeLoader:
         }
 
         tables_phase2 = {
-            "sec_num_data_raw": """
-                CREATE OR REPLACE TABLE sec_num_data_raw (
+            f"sec_num{table_suffix}": f"""
+                CREATE OR REPLACE TABLE sec_num{table_suffix} (
                     adsh VARCHAR(20) NOT NULL,
                     tag VARCHAR(256) NOT NULL,
                     version VARCHAR(20),
-                    ddate NUMBER(38,0),  -- Changed from VARCHAR to NUMBER for Int64
-                    qtrs NUMBER(38,0),  -- Changed from VARCHAR to NUMBER for Int64
+                    ddate NUMBER(38,0),
+                    qtrs NUMBER(38,0),
                     uom VARCHAR(20),
-                    segments VARCHAR,  -- Added for the object column
+                    segments VARCHAR,
                     coreg VARCHAR(256),
-                    value NUMBER(38,10),  -- For Float64
+                    value NUMBER(38,10),
                     footnote VARCHAR(512),
                     source_file VARCHAR(20),
-                    FOREIGN KEY (adsh) REFERENCES sec_sub_data_raw(adsh),
-                    FOREIGN KEY (tag, version) REFERENCES sec_tag_data_raw(tag, version)
+                    FOREIGN KEY (adsh) REFERENCES sec_sub{table_suffix}(adsh),
+                    FOREIGN KEY (tag, version) REFERENCES sec_tag{table_suffix}(tag, version)
                 );
             """,
-            "sec_pre_data_raw": """
-                CREATE OR REPLACE TABLE sec_pre_data_raw (
+            f"sec_pre{table_suffix}": f"""
+                CREATE OR REPLACE TABLE sec_pre{table_suffix} (
                     adsh VARCHAR(20) NOT NULL,
-                    report NUMBER(38,0),  -- Changed from INTEGER to NUMBER for Int64
-                    line NUMBER(38,0),  -- Changed from INTEGER to NUMBER for Int64
+                    report NUMBER(38,0),
+                    line NUMBER(38,0),
                     stmt CHAR(2),
-                    inpth NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
+                    inpth NUMBER(1,0),
                     rfile CHAR(1),
                     tag VARCHAR(256) NOT NULL,
                     version VARCHAR(20) NOT NULL,
                     plabel VARCHAR(512),
-                    negating NUMBER(1,0),  -- Changed from BOOLEAN to NUMBER for Int64
+                    negating NUMBER(1,0),
                     source_file VARCHAR(20),
-                    FOREIGN KEY (adsh) REFERENCES sec_sub_data_raw(adsh),
-                    FOREIGN KEY (tag, version) REFERENCES sec_tag_data_raw(tag, version)
+                    FOREIGN KEY (adsh) REFERENCES sec_sub{table_suffix}(adsh),
+                    FOREIGN KEY (tag, version) REFERENCES sec_tag{table_suffix}(tag, version)
                 );
             """
         }
@@ -182,9 +184,6 @@ class SnowflakeLoader:
         desc_integration_command = "DESC INTEGRATION Snowflake_AWS_OBJ"
         self.cur.execute(desc_integration_command)
         integration_info = self.cur.fetchall()
-        print("integration_info: :",integration_info)
-        
-        # Log the integration info for debugging
         logger.info("Integration Info:")
         for info in integration_info:
             logger.info(str(info))
@@ -197,9 +196,10 @@ class SnowflakeLoader:
         """
         self.cur.execute(file_format_command)
 
-        # Create stage
+        # Create stage with dynamic name
+        stage_name = f"sec_stage_{self.source_id}"
         stage_command = f"""
-        CREATE OR REPLACE STAGE sec_parquet_stage
+        CREATE OR REPLACE STAGE {stage_name}
             STORAGE_INTEGRATION = Snowflake_AWS_OBJ
             URL = 's3://{self.s3_bucket}/extracted/{self.source_id}/'
             FILE_FORMAT = parquet_format
@@ -209,17 +209,20 @@ class SnowflakeLoader:
 
     def load_data(self):
         """Load data from S3 parquet files into Snowflake tables"""
+        table_suffix = f"_{self.source_id}"
+        stage_name = f"sec_stage_{self.source_id}"
+        
         file_table_mapping = {
-            'sub': 'sec_sub_data_raw',
-            'tag': 'sec_tag_data_raw',
-            'num': 'sec_num_data_raw',
-            'pre': 'sec_pre_data_raw'
+            'sub': f'sec_sub{table_suffix}',
+            'tag': f'sec_tag{table_suffix}',
+            'num': f'sec_num{table_suffix}',
+            'pre': f'sec_pre{table_suffix}'
         }
 
         for file_type, table_name in file_table_mapping.items():
             logger.info(f"\nProcessing {file_type}.parquet into {table_name}")
             
-            file_check = f"SELECT COUNT(*) FROM @sec_parquet_stage/{file_type}.parquet"
+            file_check = f"SELECT COUNT(*) FROM @{stage_name}/{file_type}.parquet"
             try:
                 self.cur.execute(file_check)
                 file_count = self.cur.fetchone()[0]
@@ -230,7 +233,7 @@ class SnowflakeLoader:
             
             copy_command = f"""
             COPY INTO {table_name}
-            FROM @sec_parquet_stage/{file_type}.parquet
+            FROM @{stage_name}/{file_type}.parquet
             FILE_FORMAT = parquet_format
             MATCH_BY_COLUMN_NAME = CASE_INSENSITIVE
             ON_ERROR = CONTINUE;
@@ -249,21 +252,3 @@ class SnowflakeLoader:
         self.cur.close()
         self.conn.close()
         logger.info("Connections closed")
-
-def main():
-    """Main execution function"""
-    year, quarter = 2023, 4
-    try:
-        loader = SnowflakeLoader(year, quarter)
-        loader.create_schema()
-        loader.create_tables()
-        loader.setup_s3_integration()
-        loader.load_data()
-        loader.cleanup()
-        logger.info("Data loading completed successfully")
-    except Exception as e:
-        logger.error(f"Error in main process: {str(e)}")
-        raise
-
-if __name__ == "__main__":
-    main()
